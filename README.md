@@ -5,9 +5,19 @@ organisation that does not carry its own.
 
 | File | Applies to |
 |---|---|
-| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) | Every repository without its own contribution guide |
-| [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | Every repository without its own pull request template |
+| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) | Public repositories without their own contribution guide |
+| [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) | Public repositories without their own pull request template |
 | [`profile/README.md`](profile/README.md) | The organisation's public profile page |
+
+> **This repository is public, so its defaults reach public repositories only.**
+> GitHub does not apply a public `.github` repository's community health files
+> to private ones. Ten of the twelve project repositories are private and
+> therefore keep their own copies of both files.
+>
+> Making this repository private would invert the problem: private repositories
+> would inherit, and the organisation profile would disappear. Both are kept as
+> copies at the source in `docket-architecture/standards/templates`, so there is
+> one place to change them either way.
 
 ## What is deliberately not here
 
