@@ -1,0 +1,6 @@
+# CODEOWNERS — automatic reviewer assignment
+#
+# Pairs with branch protection: "Require review from Code Owners".
+# The goal is that no PR can be self-approved (AGENTS.md §6).
+
+*                               @EstebanGZam @isahrnd @juandavid175 @Melo088
