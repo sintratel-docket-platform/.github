@@ -1,0 +1,112 @@
+# Convention gates — enforce the rules in AGENTS.md mechanically.
+#
+# Place at .github/workflows/pr-conventions.yml in EVERY repository.
+# Register both jobs as required checks in branch protection.
+#
+# A convention that is not enforced is a suggestion. These two jobs are what
+# turn the commit and branch standards into something that cannot be skipped.
+#
+# This repository carries no AGENTS.md by design (AGENTS.md section 0: it
+# centralises CONTRIBUTING.md, the pull request template and CODEOWNERS here
+# instead of copying them). The canonical template's third job, the AGENTS.md
+# drift check, is left out because there is no AGENTS.md here to compare.
+
+name: PR conventions
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-conventions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  title:
+    name: PR title is a Conventional Commit
+    runs-on: ubuntu-latest
+    steps:
+      # Repositories squash-merge, so the PR title becomes the commit on main.
+      # A malformed title produces malformed history and breaks the semantic
+      # versioning and release notes work that consumes it (cards #12 and #24).
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+
+          # A scope outside this list fails the check. AGENTS.md section 5 holds
+          # the vocabulary and the reasoning; this is the copy that enforces it.
+          # Edit the source there, then redistribute — the drift check below
+          # catches a copy that fell behind.
+          #
+          # REPOSITORY-SPECIFIC: keep the three shared scopes, then replace the
+          # block under them with this repository's row from that table.
+          scopes: |
+            ci
+            security
+            deps
+          subjectPattern: ^(?![A-Z]).+[^.]$
+          subjectPatternError: |
+            The subject "{subject}" is invalid.
+            Use the imperative mood, start lowercase, and omit the trailing period.
+            Example: feat(platform): install controllers and Argo CD with Helm
+
+  branch:
+    name: Branch name and language
+    runs-on: ubuntu-latest
+    steps:
+      # release-please opens its release pull request from a branch whose name
+      # the tool fixes and does not let a configuration change. It is exempt
+      # from the naming rule only; the language check below still runs on it.
+      - name: Branch name follows <type>/<card>-<slug>
+        run: |
+          branch="${{ github.head_ref }}"
+          if [ "$branch" = "release-please--branches--main" ]; then
+            echo "Branch name exempt: $branch is the release-please release branch."
+            exit 0
+          fi
+          pattern='^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)/[0-9]+-[a-z0-9]+(-[a-z0-9]+)*$'
+          if ! printf '%s' "$branch" | grep -qE "$pattern"; then
+            echo "::error::Branch '$branch' does not match <type>/<card-number>-<slug>."
+            echo "Examples: feat/9-terraform-ci-pipeline, fix/16-oidc-subject-format"
+            exit 1
+          fi
+          echo "Branch name OK: $branch"
+
+      # Cheap guard against the project's most common regression. Catches
+      # accented characters and the Spanish words that were previously the
+      # convention, in the title and in the branch name.
+      - name: No non-English text in title or branch
+        run: |
+          title="${{ github.event.pull_request.title }}"
+          branch="${{ github.head_ref }}"
+          fail=0
+
+          if printf '%s' "$title$branch" | grep -qP '[áéíóúñÁÉÍÓÚÑ¿¡]'; then
+            echo "::error::Accented characters found. English only (AGENTS.md section 2)."
+            fail=1
+          fi
+
+          words='ambiente|efimero|persistente|plataforma|registro|identidad|verificar|huerfanos|construir|enrutado|convenciones|operacion|decisiones|logica|infraestructura'
+          if printf '%s' "$title$branch" | grep -qiE "\\b($words)\\b"; then
+            echo "::error::Spanish vocabulary found. English only (AGENTS.md section 2)."
+            fail=1
+          fi
+
+          exit "$fail"
