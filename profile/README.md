@@ -27,3 +27,7 @@ pull request.
 
 The reasoning behind each of those choices is recorded as a numbered ADR in
 [decisions.md](https://github.com/sintratel-docket-platform/docket-architecture/blob/main/decisions.md).
+
+New here? [project-walkthrough.md](https://github.com/sintratel-docket-platform/docket-architecture/blob/main/project-walkthrough.md)
+is the final presentation: the client's problem, what was built, results with
+evidence, limitations and a suggested reading order through every repository.
